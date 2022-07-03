@@ -1,6 +1,7 @@
+import type { NextPage } from 'next';
 import Link from 'next/link';
 
-const Custom404 = () => (
+const Custom404: NextPage = () => (
 	<main className="flex flex-col h-screen justify-center items-center">
 		<h1 className="flex flex-row items-center text-3xl h-fit">
 			<span className="font-bold">404</span>
