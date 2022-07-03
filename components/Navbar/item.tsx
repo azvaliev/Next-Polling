@@ -20,7 +20,7 @@ const NavItem: FunctionComponent<NavItemProps> = ({
 
 	if (isExternal) {
 		return (
-			<a href={link} rel="noopener" className={`${isCurrentRoute && '!font-normal'}`}>
+			<a href={link} target="_blank" rel="noreferrer" className={`${isCurrentRoute && '!font-normal'}`}>
 				{display}
 				{children}
 			</a>
