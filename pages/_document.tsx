@@ -7,6 +7,7 @@ const Document = () => (
 		<Head />
 		<body className="dark">
 			<Main />
+			<dialog className="dialog" />
 			<NextScript />
 		</body>
 	</Html>

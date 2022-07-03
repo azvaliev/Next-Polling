@@ -1,4 +1,6 @@
 import type { NextPage } from 'next';
+
+import Link from 'next/link';
 import Head from 'next/head';
 
 const Home: NextPage = () => (
@@ -8,9 +10,11 @@ const Home: NextPage = () => (
 		</Head>
 		<h1 className="title">Welcome to Next Polling</h1>
 		<h2 className="subtitle">Fast, seamless, and (most importantly) free</h2>
-		<button type="button" className="btn btn-primary text-2xl mt-6">
-			Create a poll
-		</button>
+		<Link href="/poll/create" passHref>
+			<button type="button" className="btn btn-primary text-2xl mt-6">
+				Create a poll
+			</button>
+		</Link>
 	</main>
 );
 

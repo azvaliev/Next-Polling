@@ -30,11 +30,17 @@ a {
   #__next {
     @apply bg-white dark:bg-black;
   }
+  input[type="text"], input[type="number"] {
+    @apply bg-transparent outline-none border-b-[1px] px-2 pb-2;
+  }
 }
 
 @layer components {
   .btn {
     @apply px-4 py-2 rounded-md;
+  }
+  .btn:hover {
+    @apply cursor-pointer;
   }
   .btn-primary {
     @apply bg-blue-500 text-white transition-colors;
@@ -47,6 +53,12 @@ a {
   }
   .subtitle {
     @apply text-2xl font-light;
+  }
+  .poll-options > *:nth-child(odd) {
+    @apply !bg-blue-500 bg-opacity-25;
+  }
+  .poll-options > *:nth-child(even) {
+    @apply !bg-red-500 bg-opacity-25;
   }
 
 }
