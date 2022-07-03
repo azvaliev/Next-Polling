@@ -1,0 +1,25 @@
+@tailwind components;
+
+@layer components {
+	.nav {
+		@apply flex flex-row fixed top-0 gap-4 items-center bg-gray-100 dark:bg-gray-900 w-full min-h-[8vh] p-4 text-xl;
+	}
+	.nav > * {
+		@apply flex flex-row;
+	}
+	.nav svg {
+		@apply h-6 w-6 ml-2;
+	}
+	.nav > *:not(.\!font-normal):hover {
+		@apply cursor-pointer underline;
+	}
+	.nav > *:nth-child(1) {
+		@apply text-2xl;
+	}
+	.nav > *:nth-child(2) {
+		@apply ml-auto;
+	}
+	.nav > *:not(:nth-child(1)) {
+		@apply font-light mr-2;
+	}
+}
