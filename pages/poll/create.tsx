@@ -59,6 +59,9 @@ const CreatePoll: NextPage = () => {
 		event.preventDefault();
 		toggleIsLoading();
 
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const reqData = parseForm(event.currentTarget);
+
 		// TODO: Call API
 		await new Promise((resolve) => {
 			setTimeout(resolve, 50000);
@@ -70,11 +73,9 @@ const CreatePoll: NextPage = () => {
 
 	return (
 		<main className="flex flex-col gap-4 h-screen justify-center items-center">
-			{isLoading && (
-				<ScreenLoadingAnim>
-					<h2 className="text-3xl text-white dark:text-black">Creating poll...</h2>
-				</ScreenLoadingAnim>
-			)}
+			<ScreenLoadingAnim isActive={isLoading}>
+				<h2 className="text-3xl text-center text-white dark:text-black">Creating poll...</h2>
+			</ScreenLoadingAnim>
 			<h1 className="title">Create your poll</h1>
 			<h2 className="subtitle">Simply select desired options, and click submit</h2>
 			<form
@@ -113,6 +114,7 @@ const CreatePoll: NextPage = () => {
 					value="Submit"
 					className="btn btn-primary text-3xl mt-8"
 					tabIndex={0}
+					disabled={isLoading}
 				/>
 			</form>
 		</main>
