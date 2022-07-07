@@ -38,17 +38,21 @@ const parseForm = (form: HTMLFormElement): ParsedFormData => {
 		const { value } = pollResponseOptionElement as HTMLInputElement;
 		if (!value) return;
 
-		responseOptions.push(value);
+		responseOptions.push(value.trim());
 	});
 
 	if (responseOptions.length < 2) throw new Error('not enough poll response options provided');
 
 	return {
-		question,
+		question: question.trim(),
 		duration: parseInt(duration, 10),
 		responseOptions,
 	};
 };
+
+interface CreatePollResponse {
+	ID: string;
+}
 
 const CreatePoll: NextPage = () => {
 	const router = useRouter();
@@ -59,16 +63,26 @@ const CreatePoll: NextPage = () => {
 		event.preventDefault();
 		toggleIsLoading();
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const reqData = parseForm(event.currentTarget);
 
 		// TODO: Call API
-		await new Promise((resolve) => {
-			setTimeout(resolve, 50000);
+		const response = await fetch('/api/polls', {
+			method: 'POST',
+			body: JSON.stringify(reqData),
 		});
 
+		if (response.status !== 201) {
+			const errorMessage = await response.text();
+
+			toggleIsLoading();
+			console.error('Recieved status code:', response.status, errorMessage);
+			return;
+		}
+
+		const result = await response.json() as CreatePollResponse;
+
 		toggleIsLoading();
-		router.push('/');
+		router.push(`/polls/${result.ID}`);
 	};
 
 	return (
