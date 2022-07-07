@@ -4,20 +4,39 @@ import PropogateLoader from 'react-spinners/PropagateLoader';
 
 interface LoadingAnimProps extends React.PropsWithChildren {
 	className?: string;
+	isActive?: boolean;
 }
 
-export const LoadingAnim: React.FunctionComponent<LoadingAnimProps> = ({ className, children }) => (
+export const LoadingAnim: React.FunctionComponent<LoadingAnimProps> = ({
+	className,
+	children,
+	isActive,
+}) => (
 	<div className={`fixed z-10 top-0 ${className}`}>
 		{ children }
-		<PropogateLoader />
+		{isActive && (
+			<PropogateLoader color={
+				document && document.body.classList.contains('dark')
+					? '#000' : '#fff'
+			}
+			/>
+		)}
 	</div>
 );
 
 LoadingAnim.defaultProps = {
 	className: '',
+	isActive: true,
 };
 
-const ScreenLoadingAnim: React.FunctionComponent<PropsWithChildren> = ({ children }) => {
+interface ScreenLoadingAnimProps extends PropsWithChildren {
+	isActive: boolean;
+}
+
+const ScreenLoadingAnim: React.FunctionComponent<ScreenLoadingAnimProps> = ({
+	isActive,
+	children,
+}) => {
 	const [isMounted, setIsMounted] = useState(false);
 
 	useEffect(() => {
@@ -29,12 +48,15 @@ const ScreenLoadingAnim: React.FunctionComponent<PropsWithChildren> = ({ childre
 	}, []);
 
 	return isMounted ? createPortal(
-		<LoadingAnim className="
-			flex flex-col gap-8 justify-center items-center h-screen w-full
-			bg-black dark:bg-white !bg-opacity-80 p-12
-		"
+		<LoadingAnim
+			className={`
+			flex flex-col gap-8 justify-center items-center h-screen w-full p-12
+			bg-black dark:bg-white !bg-opacity-80 
+			${!isActive ? 'hidden' : 'animate-fadein'}
+		`}
+			isActive={isActive}
 		>
-			{children}
+			{isActive && children}
 		</LoadingAnim>,
 		document.querySelector('.dialog')!,
 	) : null;

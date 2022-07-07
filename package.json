@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev.vercel": "vercel dev",
-    "build": "next build",
-    "start": "next start",
+    "deploy": "vercel",
     "lint": "next lint"
   },
   "dependencies": {

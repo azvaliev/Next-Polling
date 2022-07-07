@@ -38,17 +38,21 @@ const parseForm = (form: HTMLFormElement): ParsedFormData => {
 		const { value } = pollResponseOptionElement as HTMLInputElement;
 		if (!value) return;
 
-		responseOptions.push(value);
+		responseOptions.push(value.trim());
 	});
 
 	if (responseOptions.length < 2) throw new Error('not enough poll response options provided');
 
 	return {
-		question,
+		question: question.trim(),
 		duration: parseInt(duration, 10),
 		responseOptions,
 	};
 };
+
+interface CreatePollResponse {
+	ID: string;
+}
 
 const CreatePoll: NextPage = () => {
 	const router = useRouter();
@@ -59,22 +63,33 @@ const CreatePoll: NextPage = () => {
 		event.preventDefault();
 		toggleIsLoading();
 
+		const reqData = parseForm(event.currentTarget);
+
 		// TODO: Call API
-		await new Promise((resolve) => {
-			setTimeout(resolve, 50000);
+		const response = await fetch('/api/polls', {
+			method: 'POST',
+			body: JSON.stringify(reqData),
 		});
 
+		if (response.status !== 201) {
+			const errorMessage = await response.text();
+
+			toggleIsLoading();
+			console.error('Recieved status code:', response.status, errorMessage);
+			return;
+		}
+
+		const result = await response.json() as CreatePollResponse;
+
 		toggleIsLoading();
-		router.push('/');
+		router.push(`/polls/${result.ID}`);
 	};
 
 	return (
 		<main className="flex flex-col gap-4 h-screen justify-center items-center">
-			{isLoading && (
-				<ScreenLoadingAnim>
-					<h2 className="text-3xl text-white dark:text-black">Creating poll...</h2>
-				</ScreenLoadingAnim>
-			)}
+			<ScreenLoadingAnim isActive={isLoading}>
+				<h2 className="text-3xl text-center text-white dark:text-black">Creating poll...</h2>
+			</ScreenLoadingAnim>
 			<h1 className="title">Create your poll</h1>
 			<h2 className="subtitle">Simply select desired options, and click submit</h2>
 			<form
@@ -113,6 +128,7 @@ const CreatePoll: NextPage = () => {
 					value="Submit"
 					className="btn btn-primary text-3xl mt-8"
 					tabIndex={0}
+					disabled={isLoading}
 				/>
 			</form>
 		</main>

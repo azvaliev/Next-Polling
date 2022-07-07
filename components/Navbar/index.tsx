@@ -10,7 +10,7 @@ const navItemsData: NavItemProps[] = [
 		link: '/',
 	}, {
 		display: 'Create a poll',
-		link: '/poll/create',
+		link: '/polls/create',
 	}, {
 		display: 'Github',
 		link: 'https://github.com/azvaliev/Next-Polling',
