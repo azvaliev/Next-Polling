@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,7 +19,8 @@ import (
 type Poll struct {
 	Question        string
 	Duration        int32
-	ResponseOptions []string
+	ResponseOptions [2]string
+	Responses       [2]int
 }
 
 type CreatePollResponse struct {
@@ -38,11 +40,22 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 
 	if req.Method == "POST" {
 		handleNewPoll(res, req, coll)
-		coll.Database().Client().Disconnect(context.TODO())
+
+	} else if req.Method == "GET" {
+		pid := req.URL.Query().Get("pid")
+		if len(pid) < 1 {
+			coll.Database().Client().Disconnect(context.TODO())
+			res.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(res, "Request failed: please provide a valid poll id (pid)")
+			return
+		}
+
+		handleRequestPoll(res, req, coll, pid)
+
 	} else {
 		res.WriteHeader(http.StatusMethodNotAllowed)
-		return
 	}
+	coll.Database().Client().Disconnect(context.TODO())
 }
 
 func handleNewPoll(res http.ResponseWriter, req *http.Request, coll *mongodb.Collection) {
@@ -86,7 +99,7 @@ func handleNewPoll(res http.ResponseWriter, req *http.Request, coll *mongodb.Col
 		Keys: bson.M{
 			"expireAt": 1,
 		},
-		Options: options.Index().SetExpireAfterSeconds(0),
+		Options: options.Index().SetExpireAfterSeconds(int32(time.Hour.Seconds() * 72)),
 	})
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -94,14 +107,11 @@ func handleNewPoll(res http.ResponseWriter, req *http.Request, coll *mongodb.Col
 		return
 	}
 
-	// initialize an empty array for responses
-	responses := make([]int, len(reqData.ResponseOptions))
-
 	// insert a new document into mongo collection
 	insertRes, err := coll.InsertOne(context.TODO(), bson.M{
 		"question":        reqData.Question,
 		"responseOptions": reqData.ResponseOptions,
-		"responses":       responses,
+		"responses":       reqData.Responses,
 		"expireAt":        expireAt,
 	})
 	if err != nil {
@@ -124,4 +134,43 @@ func handleNewPoll(res http.ResponseWriter, req *http.Request, coll *mongodb.Col
 
 	res.WriteHeader(http.StatusInternalServerError)
 	log.Println("Failed to retrive objectID of new entry")
+}
+
+func handleRequestPoll(
+	res http.ResponseWriter,
+	req *http.Request,
+	coll *mongodb.Collection,
+	pid string,
+) {
+	// Convert poll id string to proper ObjectID
+	objId, err := primitive.ObjectIDFromHex(pid)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(res, "Error: Invalid poll id")
+		return
+	}
+
+	// Create a Map with Object ID to query Mongo
+	filter := bson.M{"_id": objId}
+	pollRawRes := coll.FindOne(context.TODO(), filter)
+
+	// Process the response and store in poll
+	var poll Poll
+	err = pollRawRes.Decode(&poll)
+
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		log.Println("Failed to decode poll", pid)
+		fmt.Fprintf(res, "Error: Invalid poll id")
+		return
+	}
+
+	// Return poll data without duration
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
+	json.NewEncoder(res).Encode(bson.M{
+		"question":  poll.Question,
+		"options":   poll.ResponseOptions,
+		"responses": poll.Responses,
+	})
 }
