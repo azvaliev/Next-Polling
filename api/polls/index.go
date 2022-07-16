@@ -136,6 +136,10 @@ func handleNewPoll(res http.ResponseWriter, req *http.Request, coll *mongodb.Col
 	log.Println("Failed to retrive objectID of new entry")
 }
 
+type BadRequestResponse struct {
+  Error string;
+}
+
 func handleRequestPoll(
 	res http.ResponseWriter,
 	req *http.Request,
@@ -145,8 +149,13 @@ func handleRequestPoll(
 	// Convert poll id string to proper ObjectID
 	objId, err := primitive.ObjectIDFromHex(pid)
 	if err != nil {
+    log.Println("Failed to convert poll id to ObjectID", err)
+
 		res.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(res, "Error: Invalid poll id")
+    rawResponse := BadRequestResponse {
+      Error: "Invalid poll id",
+    }
+    json.NewEncoder(res).Encode(rawResponse)
 		return
 	}
 
@@ -161,16 +170,27 @@ func handleRequestPoll(
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		log.Println("Failed to decode poll", pid)
-		fmt.Fprintf(res, "Error: Invalid poll id")
+
+    rawResponse := BadRequestResponse {
+      Error: "Could not find requested poll",
+    }
+	  json.NewEncoder(res).Encode(rawResponse)
 		return
 	}
 
 	// Return poll data without duration
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
-	json.NewEncoder(res).Encode(bson.M{
-		"question":  poll.Question,
-		"options":   poll.ResponseOptions,
-		"responses": poll.Responses,
-	})
+
+	rawResponse := struct {
+		Question  string    `json:"question"`
+		Options   [2]string `json:"options"`
+		Responses [2]int    `json:"responses"`
+	}{
+		poll.Question,
+		poll.ResponseOptions,
+		poll.Responses,
+	}
+
+	json.NewEncoder(res).Encode(rawResponse)
 }
