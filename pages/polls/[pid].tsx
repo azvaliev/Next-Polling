@@ -1,61 +1,60 @@
 import { Suspense } from 'react';
+import { GetServerSideProps } from 'next';
 
 import useSWR from 'swr';
 import fetcher from '../../utils/fetcher';
 
-import { GetServerSideProps } from 'next';
-import {useRouter} from 'next/router';
+type PollOptionProps = {
+	tw: string;
+	side: 'left' | 'right';
+};
 
+function PollOption({ tw, side }: PollOptionProps) {
+	return (
+		<div className={`fixed top-0 ${side}-0 z-0 w-1/2 h-screen ${tw} bg-opacity-30`}>
+			<input type="submit" value="submit" />
+		</div>
+	);
+}
 
-type PollQueryResponse = {
+export type PollQueryResponse = {
 	question?: string;
 	options?: string[];
-  responses?: number[];
-  error?: string;
-}
+	responses?: number[];
+	error?: string;
+};
 
 type ViewPollProps = {
-  pid?: string;
-}
+	pid: string;
+};
 
-const ViewPoll = ({ pid }: ViewPollProps) => {
-  const { data, error } = useSWR<PollQueryResponse>(
-    `http://localhost:3000/api/polls?pid=${pid}`,
-    fetcher, 
-    {
-      refreshInterval: 10000,
-      suspense: true 
-    }
-  );
+function ViewPoll({ pid }: ViewPollProps) {
+	const { data } = useSWR<PollQueryResponse>(`http://localhost:3000/api/polls?pid=${pid}`, fetcher, {
+		suspense: true,
+	});
 
 	return (
-		<pre>
-			{data && JSON.stringify(data, undefined, 2)}
-		</pre>
+		<form>
+			<h1 className="absolute top-[15vh] text-3xl">{data?.question}</h1>
+			<PollOption tw="bg-accent-primary-100" side="left" />
+			<PollOption tw="bg-accent-secondary-100" side="right" />
+			<div className="fixed top-0 right-0 z-0 w-1/2 h-screen bg-accent-secondary-100 bg-opacity-30" />
+			<pre>
+				{data && JSON.stringify(data, undefined, 2)}
+			</pre>
+		</form>
 	);
-};
-
-ViewPoll.defaultProps = {
-	question: '',
-	options: [],
-	responses: [],
-};
-
-type ViewProps = {
-  pid: string;
 }
 
-const View = ({ pid }: ViewProps) => {
-	return typeof document !== 'undefined' ? (
-		<main className="flex h-screen justify-center items-center">
+export default function Index({ pid }: ViewPollProps) {
+	return (
+		<main className="flex flex-col items-center justify-center h-screen">
 			<Suspense fallback={<h1>loading...</h1>}>
 				<ViewPoll pid={pid} />
 			</Suspense>
 		</main>
-	): null;
-};
-
-export default View;
+	);
+}
 
 export const getServerSideProps: GetServerSideProps = async ({ params, res }) => {
 	if (!params) {
@@ -75,44 +74,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, res }) =>
 
 	return {
 		props: {
-      pid,
+			pid,
 		},
 	};
 };
-
-// // export const getServerSideProps: GetServerSideProps = async ({ params, res }) => {
-
-// 	return {
-// 		props: {
-// 			pid,
-// 		},
-// 	};
-// };
-
-// // 	const reqParams = new URLSearchParams({
-// // 		pid,
-// // 	});
-
-// // 	const urlPrefix = process.env.local === 'true' ? 'http://' : 'https://';
-// // 	const apiEndpoint = `${urlPrefix}${req.headers.host}/api/polls?${reqParams}`;
-
-// 	console.log(apiEndpoint);
-// 	try {
-// 		const response = await fetch(apiEndpoint, {
-// 			method: 'GET',
-// 		});
-// 		const result: any = await response.text();
-// 		console.log(result);
-// 		return {
-// 			props: {
-// 				result,
-// 			},
-// 		};
-// 	} catch (err) {
-// 		console.error(err);
-// 		res.writeHead(500, 'Failed to retrive poll');
-// 		return {
-// 			props: {},
-// 		};
-// 	}
-// };

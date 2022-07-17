@@ -43,10 +43,10 @@ a {
     @apply cursor-pointer;
   }
   .btn-primary {
-    @apply bg-blue-500 text-white transition-colors;
+    @apply bg-accent-primary-100 text-white transition-colors;
   }
   .btn-primary:hover {
-    @apply bg-blue-600;
+    @apply bg-accent-primary-200;
   }
   .title {
     @apply text-5xl;
@@ -55,10 +55,10 @@ a {
     @apply text-2xl font-light;
   }
   .poll-options > *:nth-child(odd) {
-    @apply !bg-blue-500 bg-opacity-25;
+    @apply !bg-accent-primary-100 bg-opacity-25;
   }
   .poll-options > *:nth-child(even) {
-    @apply !bg-red-500 bg-opacity-25;
+    @apply !bg-accent-secondary-100 bg-opacity-25;
   }
 
 }

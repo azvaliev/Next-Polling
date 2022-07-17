@@ -30,7 +30,7 @@
         "react/jsx-indent-props": ["warn", "tab"],
         "react/jsx-props-no-spreading": "off",
         "react/function-component-definition": ["warn", {
-            "namedComponents": "arrow-function", 
+            "namedComponents": "function-declaration", 
             "unnamedComponents": "arrow-function"
         }]
     }
