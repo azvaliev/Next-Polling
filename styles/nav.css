@@ -2,7 +2,7 @@
 
 @layer components {
 	.nav {
-		@apply flex flex-row fixed top-0 z-10 gap-4 items-center bg-gray-100 dark:bg-zinc-900 w-full min-h-[8vh] p-4 text-xl;
+		@apply flex flex-row fixed top-0 z-20 gap-4 items-center bg-gray-100 dark:bg-zinc-900 w-full min-h-[8vh] p-4 text-xl;
 	}
 	.nav > * {
 		@apply flex flex-row;

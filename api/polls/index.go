@@ -21,6 +21,7 @@ type Poll struct {
 	Duration        int32
 	ResponseOptions [2]string
 	Responses       [2]int
+  ExpireAt        time.Time
 }
 
 type CreatePollResponse struct {
@@ -91,7 +92,7 @@ func handleNewPoll(res http.ResponseWriter, req *http.Request, coll *mongodb.Col
 	}
 
 	// expire one hour after poll ends
-	expireAt := time.Now().Add(time.Minute * time.Duration(reqData.Duration))
+	reqData.ExpireAt = time.Now().Add(time.Minute * time.Duration(reqData.Duration))
 
 	// create index to automatically expire in time
 	// TODO: Increase expireAfterSeconds to allow viewing after voting is over
@@ -112,7 +113,7 @@ func handleNewPoll(res http.ResponseWriter, req *http.Request, coll *mongodb.Col
 		"question":        reqData.Question,
 		"responseOptions": reqData.ResponseOptions,
 		"responses":       reqData.Responses,
-		"expireAt":        expireAt,
+		"expireAt":        reqData.ExpireAt,
 	})
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -186,10 +187,12 @@ func handleRequestPoll(
 		Question  string    `json:"question"`
 		Options   [2]string `json:"options"`
 		Responses [2]int    `json:"responses"`
+    ExpireAt  time.Time `json:"expireAt"`
 	}{
 		poll.Question,
 		poll.ResponseOptions,
 		poll.Responses,
+    poll.ExpireAt,
 	}
 
 	json.NewEncoder(res).Encode(rawResponse)

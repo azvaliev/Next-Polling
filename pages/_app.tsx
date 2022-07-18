@@ -12,6 +12,7 @@ import Navbar from '../components/Navbar';
 
 import '../styles/globals.css';
 import '../styles/nav.css';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const updateTheme = (theme: Theme) => {
 	if (theme === 'dark') {
@@ -40,7 +41,7 @@ const determineInitialTheme = () => {
 	updateTheme(themePref);
 };
 
-const MyApp = ({ Component, pageProps }: AppProps) => {
+function MyApp({ Component, pageProps }: AppProps) {
 	const [themeState, toggleTheme] = useReducer<ThemeReducer>(
 		handleToggleTheme,
 		'dark',
@@ -60,9 +61,11 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
 			<ThemeContext.Provider value={themeContextData}>
 				<Navbar />
 			</ThemeContext.Provider>
-			<Component {...pageProps} />
+			<ErrorBoundary>
+				<Component {...pageProps} />
+			</ErrorBoundary>
 		</>
 	);
-};
+}
 
 export default MyApp;

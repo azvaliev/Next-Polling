@@ -33,6 +33,12 @@ a {
   input[type="text"], input[type="number"] {
     @apply bg-transparent outline-none border-b-[1px] px-2 pb-2;
   }
+  .left-0 {
+    left: 0;
+  }
+  .right-0 {
+    right: 0;
+  }
 }
 
 @layer components {
@@ -43,7 +49,7 @@ a {
     @apply cursor-pointer;
   }
   .btn-primary {
-    @apply bg-accent-primary-100 text-white transition-colors;
+    @apply text-white bg-accent-primary-100 transition-colors;
   }
   .btn-primary:hover {
     @apply bg-accent-primary-200;
@@ -60,5 +66,4 @@ a {
   .poll-options > *:nth-child(even) {
     @apply !bg-accent-secondary-100 bg-opacity-25;
   }
-
 }
