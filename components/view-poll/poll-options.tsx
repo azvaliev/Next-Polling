@@ -1,6 +1,10 @@
+// Next / React
 import {
 	PropsWithChildren, useMemo, createContext, useContext,
 } from 'react';
+
+// Types
+import type { Winner } from './display-victors';
 
 export type PollQueryResponse = {
 	question?: string;
@@ -13,6 +17,8 @@ export type PollQueryResponse = {
 type PollOptionsProps = PropsWithChildren & {
 	data: PollQueryResponse,
 	total: number,
+	canVote: boolean;
+	winner: Winner | null;
 };
 
 type SideSplit = [number, number];
@@ -22,14 +28,18 @@ const DEFAULT_TOTAL = 0;
 const PollDataContext = createContext<PollQueryResponse & {
 	total: number;
 	sideSplit: SideSplit,
+	canVote: boolean,
 }>({
 	total: DEFAULT_TOTAL,
 	sideSplit: DEFAULT_SIDE_SPLIT,
+	canVote: false,
 });
 
 export default function PollOptions({
 	data,
 	total,
+	canVote,
+	winner,
 	...props
 }: PollOptionsProps) {
 	// This determines what % each side block will take up
@@ -42,7 +52,12 @@ export default function PollOptions({
 		return [sideOne * 0.5, sideTwo * 0.5];
 	}, [data]);
 
-	const contextData = useMemo(() => ({ ...data, total, sideSplit }), [data, total, sideSplit]);
+	const contextData = useMemo(() => ({
+		...data,
+		canVote: winner ? false : canVote,
+		total,
+		sideSplit,
+	}), [data, total, canVote, winner, sideSplit]);
 
 	return (
 		<PollDataContext.Provider value={contextData}>
@@ -89,38 +104,44 @@ function PollOption({
 		responses,
 		total,
 		sideSplit,
+		canVote,
 	} = useContext(PollDataContext);
 
 	const responseOption = options ? options[idx] : '';
 	const numVotes = responses ? responses[idx] : 0;
 	const side = Side[idx];
 
+	const votesPercent = Math.round(100 * (numVotes / total)) || 0;
+
 	return (
 		<div
 			className={`
         flex justify-center items-center relative top-0 z-0 h-screen 
-        bg-opacity-30 hover:bg-opacity-40 transition-all
+        bg-opacity-30 hover:bg-opacity-40 transition-smooth
         ${side === 'left' ? 'left-0' : 'right-0'} ${tw} 
       `}
 			style={{ width: `${sideSplit[idx]}%`, minWidth: '20%' }}
 		>
-			<input
+			<button
 				className={`
           border-2 text-2xl py-2 px-8 rounded-md shadow-lg
           hover:cursor-pointer active:border-none focus:outline-black
           ${twBtn} 
         `}
 				type="submit"
-				value={responseOption}
+				value={idx}
 				aria-label={`Vote for ${responseOption}`}
 				name="vote"
-			/>
+				disabled={!canVote}
+			>
+				{responseOption}
+			</button>
 			<div className="absolute w-full text-center bottom-10">
 				<h2 className="text-3xl font-light">
 					{`${numVotes} votes`}
 				</h2>
 				<h3 className="text-xl font-thin">
-					{`(${Math.round(100 * (numVotes / total))}%)`}
+					{`(${votesPercent}%)`}
 				</h3>
 			</div>
 		</div>

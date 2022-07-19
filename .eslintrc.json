@@ -38,6 +38,20 @@
         }],
         "@typescript-eslint/no-use-before-define": ["error", {
           "functions": false
+        }],
+        "import/no-anonymous-default-export": "off",
+        "no-unused-vars": ["error", {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_"
+        }],
+        "@typescript-eslint/no-unused-vars": ["error", {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_"
+        }],
+        "no-console": ["error", {
+            "allow": ["error"]
         }]
     }
 }

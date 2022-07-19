@@ -3,15 +3,14 @@ import {
 } from 'next/document';
 
 export default function Document() {
-  return (
-	<Html>
-		<Head />
-		<body className="dark">
-			<Main />
-			<dialog className="dialog" />
-			<NextScript />
-		</body>
-	</Html>
-)
-};
-
+	return (
+		<Html>
+			<Head />
+			<body className="dark">
+				<Main />
+				<dialog className="dialog" />
+				<NextScript />
+			</body>
+		</Html>
+	);
+}

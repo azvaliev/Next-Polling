@@ -1,18 +1,35 @@
+// Next / React
 import {
-	Suspense, useMemo,
+	Suspense, useMemo, useState,
 } from 'react';
 import { GetServerSideProps } from 'next';
-
-import useSWR from 'swr';
 import Head from 'next/head';
+
+// Lib
+import useSWR from 'swr';
+
+// Utils
 import fetcher from '../../utils/fetcher';
-import PollOptions, { PollQueryResponse } from '../../components/ViewPoll/PollOptions';
+
+// Components
+import {
+	createFormatExpireAtString,
+	determineWinner,
+	MS_IN_SEC,
+} from '../../components/view-poll/utils';
+import PollOptions, { PollQueryResponse } from '../../components/view-poll/poll-options';
+import DisplayVictors from '../../components/view-poll/display-victors';
+import { LoadingText } from '../../components/loading';
+import SharePollPrompt from '../../components/view-poll/share-poll-prompt';
 
 type ViewPollProps = {
 	pid: string;
+	canVote: boolean;
+	initialPollData?: PollQueryResponse;
+	host?: string;
 };
 
-export default function Index({ pid }: ViewPollProps) {
+export default function Index(props: ViewPollProps) {
 	return (
 		<>
 			<Head>
@@ -21,17 +38,19 @@ export default function Index({ pid }: ViewPollProps) {
 				</title>
 			</Head>
 			<main className="flex flex-col items-center justify-center h-screen">
-				<Suspense fallback={<h1>loading...</h1>}>
-					<ViewPoll pid={pid} />
+				<Suspense fallback={<LoadingText />}>
+					<ViewPoll {...props} />
 				</Suspense>
 			</main>
 		</>
 	);
 }
 
-const MS_IN_HOUR = 3.6e+6;
-const MS_IN_MINUTE = 60000;
-const MS_IN_SEC = 1000;
+Index.defaultProps = {
+	initialPollData: undefined,
+	host: '',
+};
+
 const SWRConfig: Parameters<typeof useSWR<PollQueryResponse>>[2] = {
 	revalidateIfStale: true,
 	revalidateOnMount: true,
@@ -40,74 +59,78 @@ const SWRConfig: Parameters<typeof useSWR<PollQueryResponse>>[2] = {
 	refreshInterval: 7 * MS_IN_SEC,
 };
 
-function ViewPoll({ pid }: ViewPollProps) {
+function ViewPoll({
+	pid, canVote, host, initialPollData,
+}: ViewPollProps) {
+	const [hasEnded, setHasEnded] = useState(false);
 	const { data, isValidating } = useSWR<PollQueryResponse>(
 		`http://localhost:3000/api/polls?pid=${pid}`,
 		fetcher,
 		{
-			suspense: true,
+			...SWRConfig,
+			fallbackData: initialPollData,
 		},
 	);
 
 	const expiresAtString = useMemo(() => {
 		if (!data?.expireAt) return null;
-		return createFormatExpireAtString(data?.expireAt);
+		const [isExpired, message] = createFormatExpireAtString(data?.expireAt);
 
+		// Only set the state if it wasn't known that the poll was ended already
+		if (isExpired && hasEnded === false) {
+			setHasEnded(true);
+		}
+
+		return message;
+		// We disable the eslint rule here, as I want the time to update every couple
+		// seconds, and batching it with isValidating is useful
 		/* eslint-disable react-hooks/exhaustive-deps */
 	}, [data, isValidating]);
 
 	const total = data?.responses?.reduce((sum, res) => sum + res, 0);
 
+	const currentWinner = determineWinner(data?.responses || []);
+	const { options } = data as PollQueryResponse;
+
 	return (
-		<form className="relative flex items-center w-full h-screen">
-			<PollOptions data={data || {}} total={total || 0}>
+		<form
+			className="relative flex items-center w-full h-screen"
+		>
+			<PollOptions
+				data={data || {}}
+				total={total || 0}
+				canVote={canVote && !hasEnded}
+				winner={hasEnded ? currentWinner : null}
+			>
 				<div
 					className="flex-grow py-10 text-center bg-white dark:bg-black bg-opacity-60 dark:bg-opacity-40"
 				>
-					<h1 className="text-3xl ">
+					<h1 className="text-4xl">
 						{data?.question}
 					</h1>
-					<h2 className="mt-2 text-xl font-thin">
-						(
-						{expiresAtString}
+					{/* if the poll has ended, don't display the timewhen the poll is ending */}
+					{
+						!hasEnded ? (
+							<h2 className="mt-2 text-xl font-thin">
+								{`(${expiresAtString})`}
+							</h2>
 						)
-					</h2>
+							: (
+								<DisplayVictors options={options} results={currentWinner} />
+							)
+					}
+					{!hasEnded && <SharePollPrompt host={host || ''} />}
 				</div>
 			</PollOptions>
-			{/*
-				<pre>
-					{data && JSON.stringify(data, undefined, 2)}
-				</pre>
-          */}
 		</form>
 	);
 }
 
-function createFormatExpireAtString(expireAt: string): string {
-	const date = new Date(expireAt);
+ViewPoll.defaultProps = Index.defaultProps;
 
-	const now = Date.now();
-	const expiresAt = date.getTime();
-
-	const expiresIn = expiresAt - now;
-
-	if (expiresIn < MS_IN_SEC) {
-		return 'This poll has ended';
-	}
-	if ((expiresIn / MS_IN_MINUTE) < 1.5) {
-		const remainingSeconds = Math.round(expiresIn / MS_IN_SEC);
-		return `This poll expires in ${remainingSeconds} seconds`;
-	}
-	if (expiresIn / MS_IN_MINUTE < 90) {
-		const remainingMinutes = Math.round(expiresIn / MS_IN_MINUTE);
-		return `This poll expires in ${remainingMinutes} minutes`;
-	}
-	const remainingHours = Math.round(expiresIn / MS_IN_HOUR);
-	const remainingMinutes = Math.round((expiresIn % MS_IN_HOUR) / MS_IN_MINUTE);
-	return `This poll expires in ${remainingHours} hours ${remainingMinutes > 1 && `and ${remainingMinutes}`} minutes`;
-}
-
-export const getServerSideProps: GetServerSideProps = async ({ params, res }) => {
+export const getServerSideProps: GetServerSideProps = async ({
+	params, query, req, res,
+}) => {
 	if (!params) {
 		res.writeHead(404, 'Invalid poll id');
 		return {
@@ -123,9 +146,42 @@ export const getServerSideProps: GetServerSideProps = async ({ params, res }) =>
 		};
 	}
 
+	const canVote = req.cookies[pid] === undefined;
+
+	const {
+		expireAt, question, optOne, optTwo,
+	} = query;
+
+	// Validate that all query strings are present and correct type
+	// This is so that the creator of a poll does not need to witness
+	// a loading screen after they just entered the poll information
+	if (
+		typeof expireAt === 'string'
+    && typeof question === 'string'
+    && typeof optOne === 'string'
+    && typeof optTwo === 'string'
+	) {
+		const initialPollData: PollQueryResponse = {
+			question,
+			options: [optOne, optTwo],
+			responses: [0, 0],
+			expireAt,
+		};
+		return {
+			props: {
+				pid,
+				canVote,
+				initialPollData,
+				host: req.headers.host || '',
+			},
+		};
+	}
+
 	return {
 		props: {
 			pid,
+			canVote,
+			host: req.headers.host || '',
 		},
 	};
 };

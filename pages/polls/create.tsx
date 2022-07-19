@@ -1,30 +1,35 @@
-import type { NextPage } from 'next';
-
+// Next / React
 import { useRouter } from 'next/router';
 import { FormEventHandler } from 'react';
-import ScreenLoadingAnim from '../../components/Loading';
-import useToggle from '../../hooks/useToggle';
 
-interface PollOptionProps {
+// Utils
+import useToggle from '../../hooks/use-toggle';
+
+// Components
+import { LoadingScreen } from '../../components/loading';
+
+type PollOptionProps = {
 	idx: number;
+};
+
+function PollOption({ idx }: PollOptionProps) {
+	return (
+		<input
+			type="text"
+			name="poll-response"
+			aria-label={`Poll response option ${idx}`}
+			placeholder="Poll response"
+			className="block w-full py-3 text-xl"
+			required
+		/>
+	);
 }
 
-const PollOption: React.FunctionComponent<PollOptionProps> = ({ idx }: PollOptionProps) => (
-	<input
-		type="text"
-		name="poll-response"
-		aria-label={`Poll response option ${idx}`}
-		placeholder="Poll response"
-		className="block w-full text-xl py-3"
-		required
-	/>
-);
-
-interface ParsedFormData {
+type ParsedFormData = {
 	question?: string;
 	duration?: number;
 	responseOptions?: string[];
-}
+};
 
 const parseForm = (form: HTMLFormElement): ParsedFormData => {
 	const formElements = form.elements;
@@ -50,11 +55,11 @@ const parseForm = (form: HTMLFormElement): ParsedFormData => {
 	};
 };
 
-interface CreatePollResponse {
+type CreatePollResponse = {
 	ID: string;
-}
+};
 
-const CreatePoll: NextPage = () => {
+function CreatePoll() {
 	const router = useRouter();
 
 	const [isLoading, toggleIsLoading] = useToggle(false);
@@ -81,15 +86,31 @@ const CreatePoll: NextPage = () => {
 
 		const result = await response.json() as CreatePollResponse;
 
+		// Setting up a query string so that when a poll creator is redirected
+		// to the view poll page, the data is already filled in and there isn't
+		// an additional loading screen
+		const { question, responseOptions, duration } = reqData;
+		const [optOne, optTwo] = responseOptions as string[];
+
+		const expireAt = new Date();
+		const pollDuration = duration as number;
+		expireAt.setMinutes(expireAt.getMinutes() + pollDuration);
+
+		const newRoute = `/polls/${result.ID}?${new URLSearchParams({
+			question: question as string,
+			optOne,
+			optTwo,
+			expireAt: expireAt.toUTCString(),
+		})}`;
 		toggleIsLoading();
-		router.push(`/polls/${result.ID}`);
+		router.push(newRoute);
 	};
 
 	return (
-		<main className="flex flex-col gap-4 h-screen justify-center items-center">
-			<ScreenLoadingAnim isActive={isLoading}>
+		<main className="flex flex-col items-center justify-center h-screen gap-4">
+			<LoadingScreen isActive={isLoading}>
 				<h2 className="text-3xl text-center text-white dark:text-black">Creating poll...</h2>
-			</ScreenLoadingAnim>
+			</LoadingScreen>
 			<h1 className="title">Create your poll</h1>
 			<h2 className="subtitle">Simply select desired options, and click submit</h2>
 			<form
@@ -108,7 +129,7 @@ const CreatePoll: NextPage = () => {
 					autoFocus
 					required
 				/>
-				<fieldset className="poll-options w-full py-6">
+				<fieldset className="w-full py-6 poll-options">
 					<PollOption idx={0} />
 					<PollOption idx={1} />
 				</fieldset>
@@ -117,7 +138,7 @@ const CreatePoll: NextPage = () => {
 					name="duration"
 					aria-label="Poll duration: enter number of minutes"
 					placeholder="Poll duration (minutes)"
-					className="w-full text-xl mt-2"
+					className="w-full mt-2 text-xl"
 					min={2}
 					max={180}
 					tabIndex={0}
@@ -126,13 +147,12 @@ const CreatePoll: NextPage = () => {
 				<input
 					type="submit"
 					value="Submit"
-					className="btn btn-primary text-3xl mt-8"
+					className="mt-8 text-3xl btn btn-primary"
 					tabIndex={0}
 					disabled={isLoading}
 				/>
 			</form>
 		</main>
 	);
-};
-
+}
 export default CreatePoll;

@@ -39,6 +39,9 @@ a {
   .right-0 {
     right: 0;
   }
+  .transition-smooth {
+    transition: all 350ms ease-in-out;
+  }
 }
 
 @layer components {

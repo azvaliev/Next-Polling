@@ -5,11 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "dev.vercel": "vercel dev",
+    "build": "next build",
     "deploy": "vercel",
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "^12.1.7-canary.48",
+    "next": "^12.2.2",
     "react": "18.1.0",
     "react-dom": "18.1.0",
     "react-spinners": "^0.13.3",

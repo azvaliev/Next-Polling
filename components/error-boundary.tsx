@@ -1,7 +1,15 @@
+/* eslint-disable react/destructuring-assignment */
+// Next / React
 import { Component } from 'react';
-import Custom404 from '../pages/404';
 
-class ErrorBoundary extends Component {
+// Components
+import Custom500 from '../pages/500';
+
+type ErrorBoundaryState = {
+	hasError?: boolean;
+};
+
+class ErrorBoundary extends Component<any, ErrorBoundaryState> {
 	constructor(props: any) {
 		super(props);
 
@@ -9,7 +17,6 @@ class ErrorBoundary extends Component {
 		this.state = { hasError: false };
 	}
 
-	/* eslint-disable @typescript-eslint/no-unused-vars  */
 	static getDerivedStateFromError(_error: Error) {
 		// Update state so the next render will show the fallback UI
 		return { hasError: true };
@@ -22,11 +29,12 @@ class ErrorBoundary extends Component {
 
 	render() {
 		// Check if the error is thrown
+		// eslint-disable-next-line react/destructuring-assignment
 		if (this.state.hasError) {
 			// You can render any custom fallback UI
-			this.state.hasError = false;
+			this.setState({ hasError: false });
 			return (
-				<Custom404 />
+				<Custom500 />
 			);
 		}
 
