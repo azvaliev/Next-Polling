@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	utils "next-polling/api-utils"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,7 +22,7 @@ type Poll struct {
 	Duration        int32
 	ResponseOptions [2]string
 	Responses       [2]int
-  ExpireAt        time.Time
+	ExpireAt        time.Time
 }
 
 type CreatePollResponse struct {
@@ -43,6 +44,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 		handleNewPoll(res, req, coll)
 
 	} else if req.Method == "GET" {
+		res.Header().Add("Access-Control-Allow-Origin", os.Getenv("VERCEL_URL"))
 		pid := req.URL.Query().Get("pid")
 		if len(pid) < 1 {
 			coll.Database().Client().Disconnect(context.TODO())
@@ -138,7 +140,7 @@ func handleNewPoll(res http.ResponseWriter, req *http.Request, coll *mongodb.Col
 }
 
 type BadRequestResponse struct {
-  Error string;
+	Error string
 }
 
 func handleRequestPoll(
@@ -150,13 +152,13 @@ func handleRequestPoll(
 	// Convert poll id string to proper ObjectID
 	objId, err := primitive.ObjectIDFromHex(pid)
 	if err != nil {
-    log.Println("Failed to convert poll id to ObjectID", err)
+		log.Println("Failed to convert poll id to ObjectID", err)
 
 		res.WriteHeader(http.StatusBadRequest)
-    rawResponse := BadRequestResponse {
-      Error: "Invalid poll id",
-    }
-    json.NewEncoder(res).Encode(rawResponse)
+		rawResponse := BadRequestResponse{
+			Error: "Invalid poll id",
+		}
+		json.NewEncoder(res).Encode(rawResponse)
 		return
 	}
 
@@ -172,10 +174,10 @@ func handleRequestPoll(
 		res.WriteHeader(http.StatusBadRequest)
 		log.Println("Failed to decode poll", pid)
 
-    rawResponse := BadRequestResponse {
-      Error: "Could not find requested poll",
-    }
-	  json.NewEncoder(res).Encode(rawResponse)
+		rawResponse := BadRequestResponse{
+			Error: "Could not find requested poll",
+		}
+		json.NewEncoder(res).Encode(rawResponse)
 		return
 	}
 
@@ -187,12 +189,12 @@ func handleRequestPoll(
 		Question  string    `json:"question"`
 		Options   [2]string `json:"options"`
 		Responses [2]int    `json:"responses"`
-    ExpireAt  time.Time `json:"expireAt"`
+		ExpireAt  time.Time `json:"expireAt"`
 	}{
 		poll.Question,
 		poll.ResponseOptions,
 		poll.Responses,
-    poll.ExpireAt,
+		poll.ExpireAt,
 	}
 
 	json.NewEncoder(res).Encode(rawResponse)
