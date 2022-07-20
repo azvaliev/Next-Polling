@@ -26,7 +26,7 @@ type ViewPollProps = {
 	pid: string;
 	canVote: boolean;
 	initialPollData?: PollQueryResponse;
-	host?: string;
+	baseURL: string;
 };
 
 export default function Index(props: ViewPollProps) {
@@ -60,11 +60,11 @@ const SWRConfig: Parameters<typeof useSWR<PollQueryResponse>>[2] = {
 };
 
 function ViewPoll({
-	pid, canVote, host, initialPollData,
+	pid, canVote, baseURL, initialPollData,
 }: ViewPollProps) {
 	const [hasEnded, setHasEnded] = useState(false);
 	const { data, isValidating } = useSWR<PollQueryResponse>(
-		`http://localhost:3000/api/polls?pid=${pid}`,
+		`${baseURL}/api/polls?pid=${pid}`,
 		fetcher,
 		{
 			...SWRConfig,
@@ -119,7 +119,7 @@ function ViewPoll({
 								<DisplayVictors options={options} results={currentWinner} />
 							)
 					}
-					{!hasEnded && <SharePollPrompt host={host || ''} />}
+					{!hasEnded && <SharePollPrompt pid={pid} baseURL={baseURL} />}
 				</div>
 			</PollOptions>
 		</form>
@@ -127,6 +127,8 @@ function ViewPoll({
 }
 
 ViewPoll.defaultProps = Index.defaultProps;
+
+const hasIllegalCharacterRegExp = /(\W)/g;
 
 export const getServerSideProps: GetServerSideProps = async ({
 	params, query, req, res,
@@ -139,14 +141,36 @@ export const getServerSideProps: GetServerSideProps = async ({
 	}
 	const { pid } = params;
 
-	if (!pid || Array.isArray(pid)) {
+	if (!pid || Array.isArray(pid) || hasIllegalCharacterRegExp.test(pid)) {
 		res.writeHead(404, 'Invalid poll id');
 		return {
 			props: {},
 		};
 	}
 
+	const [protocol, domain] = [req.headers['x-forwarded-proto'], req.headers['x-vercel-deployment-url']];
+
+	// This should never happen but in case it does we want this behavior to be recorded in logs
+	// https://vercel.com/docs/concepts/edge-network/headers
+	if (typeof protocol !== 'string' || typeof domain !== 'string') {
+		const error = 'Missing required headers x-forwarded-proto | x-forwarded-host';
+
+		console.error(error, req.headers);
+		res.writeHead(400, error);
+		return {
+			props: {},
+		};
+	}
+
+	const baseURL = `${protocol}://${domain}`;
 	const canVote = req.cookies[pid] === undefined;
+
+	// These props will be returned no matter what happens at this point
+	const props = {
+		pid,
+		canVote,
+		baseURL,
+	};
 
 	const {
 		expireAt, question, optOne, optTwo,
@@ -169,19 +193,13 @@ export const getServerSideProps: GetServerSideProps = async ({
 		};
 		return {
 			props: {
-				pid,
-				canVote,
+				...props,
 				initialPollData,
-				host: req.headers.host || '',
 			},
 		};
 	}
 
 	return {
-		props: {
-			pid,
-			canVote,
-			host: req.headers.host || '',
-		},
+		props,
 	};
 };

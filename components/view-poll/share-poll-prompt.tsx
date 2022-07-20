@@ -3,17 +3,17 @@ import { useRouter } from 'next/router';
 import { useRef } from 'react';
 
 type SharePollPromptProps = {
-	host: string;
+	baseURL: string;
+	pid: string;
 };
 
-const parseOutQueryStringRegExp = /(.*)\?.*/;
+const matchURLMethodRegExp = /http(s)?:\/\//;
 
-function SharePollPrompt({ host }: SharePollPromptProps) {
+function SharePollPrompt({ baseURL, pid }: SharePollPromptProps) {
 	const router = useRouter();
 	const copyBtnRef = useRef<HTMLButtonElement | null>(null);
 
-	const parsedOutQueryStringRegExp = parseOutQueryStringRegExp.exec(router.asPath) || [];
-	const link = `${host}${parsedOutQueryStringRegExp[1]}`;
+	const link = `${baseURL.replace(matchURLMethodRegExp, '')}${router.pathname.replace('[pid]', pid)}`;
 
 	const handleCopyLink = (): void => {
 		if (typeof window === 'undefined') {
