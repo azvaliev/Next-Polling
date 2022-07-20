@@ -13,7 +13,7 @@ module.exports = {
         fadein: {
           '0%': { opacity: 0 },
           '100%': { opacity: 1 },
-        }
+        },
       },
       colors: {
         'accent-primary-100': '#3B82F6',

@@ -49,7 +49,7 @@ export default function PollOptions({
 		sideOne = Math.round((sideOne * 100) / (sideOne + sideTwo));
 		sideTwo = 100 - sideOne;
 
-		return [sideOne * 0.5, sideTwo * 0.5];
+		return [sideOne * 0.35, sideTwo * 0.35];
 	}, [data]);
 
 	const contextData = useMemo(() => ({

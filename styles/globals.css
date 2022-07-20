@@ -33,12 +33,6 @@ a {
   input[type="text"], input[type="number"] {
     @apply bg-transparent outline-none border-b-[1px] px-2 pb-2;
   }
-  .left-0 {
-    left: 0;
-  }
-  .right-0 {
-    right: 0;
-  }
   .transition-smooth {
     transition: all 350ms ease-in-out;
   }

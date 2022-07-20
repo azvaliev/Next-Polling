@@ -103,7 +103,7 @@ function ViewPoll({
 				winner={hasEnded ? currentWinner : null}
 			>
 				<div
-					className="flex-grow py-10 text-center bg-white dark:bg-black bg-opacity-60 dark:bg-opacity-40"
+					className="flex flex-col items-center flex-grow py-10 text-center bg-white dark:bg-black bg-opacity-60 dark:bg-opacity-40"
 				>
 					<h1 className="text-4xl">
 						{data?.question}

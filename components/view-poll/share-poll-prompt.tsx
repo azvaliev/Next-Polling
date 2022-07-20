@@ -34,7 +34,7 @@ function SharePollPrompt({ baseURL, pid }: SharePollPromptProps) {
 	};
 
 	return (
-		<div className="px-6 py-4 mx-auto mt-6 font-light bg-gray-100 dark:bg-zinc-900 w-fit rounded-md">
+		<div className="px-6 py-4 mx-12 mt-6 font-light bg-gray-100 dark:bg-zinc-900 w-fit rounded-md">
 			<span className="block mb-2">
 				Know someone who&apos;d like to participate? Send them this link
 			</span>
