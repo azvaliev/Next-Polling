@@ -39,8 +39,10 @@ By default, api routes are configured to access a database specified in .env lik
 ```env
 MONGO_URL={MONGO_CONNECTION_STRING}
 DEV={true|false}
+VERCEL_URL={localhost}
 ```
 MONGO_URL specifies the connection string for mongodb, it will look for a database called `next-polling` and a collection name of `dev` or `prod` based on the value of DEV in the env
+VERCEL_URL is used to configure CORS, it is the allowed domain for requests. See index.go for details
 
 ### How do the api routes work?
 

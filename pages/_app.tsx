@@ -1,3 +1,4 @@
+// Next / React
 import type { AppProps } from 'next/app';
 import {
 	DispatchWithoutAction,
@@ -6,10 +7,15 @@ import {
 	useReducer,
 } from 'react';
 
+// Utils
 import type { Theme, ThemeContextData, ThemeReducer } from '../context/theme';
 import ThemeContext from '../context/theme';
-import Navbar from '../components/Navbar';
 
+// Components
+import ErrorBoundary from '../components/error-boundary';
+import Navbar from '../components/navbar';
+
+// Styles
 import '../styles/globals.css';
 import '../styles/nav.css';
 
@@ -40,7 +46,7 @@ const determineInitialTheme = () => {
 	updateTheme(themePref);
 };
 
-const MyApp = ({ Component, pageProps }: AppProps) => {
+function MyApp({ Component, pageProps }: AppProps) {
 	const [themeState, toggleTheme] = useReducer<ThemeReducer>(
 		handleToggleTheme,
 		'dark',
@@ -60,9 +66,11 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
 			<ThemeContext.Provider value={themeContextData}>
 				<Navbar />
 			</ThemeContext.Provider>
-			<Component {...pageProps} />
+			<ErrorBoundary>
+				<Component {...pageProps} />
+			</ErrorBoundary>
 		</>
 	);
-};
+}
 
 export default MyApp;

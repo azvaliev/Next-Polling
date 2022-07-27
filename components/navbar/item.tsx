@@ -1,19 +1,20 @@
+// Next /React
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import type { FunctionComponent, PropsWithChildren } from 'react';
+import type { PropsWithChildren } from 'react';
 
-export interface NavItemProps extends PropsWithChildren {
+export type NavItemProps = PropsWithChildren & {
 	display: string;
 	link: string;
 	isExternal?: boolean;
-}
+};
 
-const NavItem: FunctionComponent<NavItemProps> = ({
+function NavItem({
 	display,
 	link,
 	isExternal,
 	children,
-}) => {
+}: NavItemProps) {
 	const router = useRouter();
 
 	const isCurrentRoute = router.route === link;
@@ -35,7 +36,7 @@ const NavItem: FunctionComponent<NavItemProps> = ({
 			</span>
 		</Link>
 	);
-};
+}
 
 NavItem.defaultProps = {
 	isExternal: false,
