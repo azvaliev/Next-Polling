@@ -24,7 +24,7 @@
     ],
     "rules": {
         "no-tabs": "off",
-        "indent": ["warn", "tab"],
+        "indent": "off",
         "@typescript-eslint/indent": ["warn", "tab"],
         "react/jsx-indent": ["warn", "tab"], 
         "react/jsx-indent-props": ["warn", "tab"],
